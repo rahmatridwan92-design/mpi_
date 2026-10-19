@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MPI Dasar Jaringan & Konsep Perencanaan</title>
+<style>
+:root{--bg:#f4f7fc;--card:#fff;--tx:#1b2440;--mu:#5b6685;--pr:#3b6df0;--ac:#ff7a45;--ok:#1fa36b;--no:#e0455a;--bd:#dde3f2}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1426;--card:#1a2140;--tx:#eef1fb;--mu:#a2abc8;--pr:#7b9dff;--ac:#ff9566;--ok:#35c58b;--no:#ff6b80;--bd:#2c3560}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:linear-gradient(135deg,#3b6df0,#8a4fff);color:#fff;padding:20px 16px;text-align:center}
+header h1{margin:0;font-size:1.4rem}header p{margin:4px 0 0;opacity:.9;font-size:.9rem}
+nav{display:flex;gap:6px;overflow-x:auto;padding:10px;background:var(--card);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:5}
+nav button{flex:0 0 auto;border:1px solid var(--bd);background:var(--bg);color:var(--tx);padding:8px 12px;border-radius:20px;cursor:pointer;font-size:.85rem}
+nav button.on{background:var(--pr);color:#fff;border-color:var(--pr)}
+main{max-width:820px;margin:0 auto;padding:16px}
+section{display:none}section.on{display:block}
+h2{margin:.2em 0 .3em}.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin:12px 0}
+.mu{color:var(--mu);font-size:.92rem}
+.btn{background:var(--pr);color:#fff;border:0;padding:10px 18px;border-radius:12px;font-size:1rem;cursor:pointer;margin:6px 6px 0 0;font-family:inherit}
+.btn.alt{background:var(--ac)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+.btn.danger{background:var(--no)}
+.btn.sm{padding:7px 11px;font-size:.82rem;margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.tile{background:var(--bg);border:2px solid var(--bd);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;color:var(--tx);font-size:.95rem}
+.tile .e{font-size:2.4rem;display:block}.tile.sel{border-color:var(--pr);transform:scale(1.04)}
+.tile.done{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,var(--card));pointer-events:none}
+.tile.bad{border-color:var(--no);animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px 12px;border-radius:12px;border:2px solid var(--bd);background:var(--bg);color:var(--tx);font-size:.95rem;cursor:pointer}
+.opt.sel{border-color:var(--pr)}.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,var(--card))}.opt.no{border-color:var(--no);background:color-mix(in srgb,var(--no) 15%,var(--card))}
+.fb{margin-top:8px;font-size:.92rem;padding:8px 10px;border-radius:10px;background:var(--bg)}
+details{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px 14px;margin:8px 0}
+summary{cursor:pointer;font-weight:600}details ul{margin:8px 0 2px;padding-left:20px}
+.bar{height:10px;border-radius:6px;background:var(--bd);overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .4s}
+svg{width:100%;height:auto;background:var(--bg);border-radius:14px;border:1px solid var(--bd)}
+svg text{fill:var(--tx);font-size:11px}
+textarea{width:100%;min-height:70px;border-radius:12px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);padding:10px;font:inherit}
+.mood{font-size:2rem;background:none;border:2px solid transparent;border-radius:12px;cursor:pointer;padding:2px 8px}.mood.sel{border-color:var(--pr)}
+.big{font-size:2.2rem;font-weight:800;color:var(--pr)}
+
+/* ---------- layar & login ---------- */
+.screen{display:none}.screen.on{display:block}
+#screen-login.on{display:grid;min-height:100dvh;place-items:center;padding:20px 14px;background:radial-gradient(1200px 600px at 15% -10%,color-mix(in srgb,var(--pr) 22%,transparent),transparent 60%),radial-gradient(900px 500px at 110% 110%,color-mix(in srgb,var(--ac) 20%,transparent),transparent 55%),var(--bg)}
+.auth-card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--bd);border-radius:22px;padding:26px 22px;box-shadow:0 24px 60px rgba(20,30,70,.16)}
+.brand{font-size:2.8rem;text-align:center;line-height:1}
+.auth-card h1{font-size:1.25rem;text-align:center;margin:8px 0 2px}
+.auth-card .sub{text-align:center;color:var(--mu);font-size:.88rem;margin:4px 0 18px}
+.rtabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg);padding:6px;border-radius:14px;margin-bottom:16px;border:1px solid var(--bd)}
+.rtab{border:0;background:transparent;color:var(--mu);padding:10px;border-radius:10px;font:inherit;font-size:.92rem;font-weight:600;cursor:pointer}
+.rtab.on{background:var(--pr);color:#fff;box-shadow:0 4px 14px color-mix(in srgb,var(--pr) 40%,transparent)}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:.8rem;font-weight:700;color:var(--mu);margin-bottom:6px}
+.field input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit}
+.field input:focus{outline:none;border-color:var(--pr);box-shadow:0 0 0 3px color-mix(in srgb,var(--pr) 18%,transparent)}
+.btn.full{width:100%;margin:4px 0 0;padding:13px}
+.err{color:var(--no);font-size:.84rem;min-height:1.1em;text-align:center;margin:4px 0 2px}
+.note{font-size:.75rem;color:var(--mu);text-align:center;margin:16px 0 0;line-height:1.6}
+.who{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;font-size:.85rem;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.4);padding:6px 12px;border-radius:20px;font:inherit;font-size:.78rem;cursor:pointer}
+.chip:active{transform:scale(.97)}
+
+/* ---------- admin ---------- */
+#screen-admin header{background:linear-gradient(135deg,#1f2a55,#3b6df0)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 10px}
+.tools .btn{margin:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;margin:10px 0 14px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px 14px}
+.stat b{display:block;font-size:1.45rem;color:var(--pr);line-height:1.2}
+.stat span{font-size:.76rem;color:var(--mu)}
+.search{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--bd);background:var(--card);color:var(--tx);font:inherit;margin-bottom:12px}
+.search:focus{outline:none;border-color:var(--pr)}
+.tblwrap{overflow-x:auto;border:1px solid var(--bd);border-radius:14px;background:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:.86rem;min-width:660px}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap;vertical-align:middle}
+th{background:var(--bg);color:var(--mu);font-size:.73rem;text-transform:uppercase;letter-spacing:.5px}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:color-mix(in srgb,var(--pr) 5%,transparent)}
+td .nm{font-weight:700;display:block;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+td .kp{display:block;font-size:.75rem;color:var(--mu);line-height:1.35}
+.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:700}
+.tag.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.tag.mid{background:color-mix(in srgb,var(--ac) 20%,transparent);color:var(--ac)}
+.tag.new{background:color-mix(in srgb,var(--pr) 16%,transparent);color:var(--pr)}
+.empty{text-align:center;padding:40px 18px;color:var(--mu)}
+.empty .e{font-size:2.4rem;display:block;margin-bottom:8px}
+.acts{display:flex;gap:6px}
+.admin-note{font-size:.78rem;color:var(--mu);margin:14px 0 4px;line-height:1.6}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(12,18,38,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:60;backdrop-filter:blur(3px)}
+.modal.on{display:flex}
+.sheet{background:var(--card);border:1px solid var(--bd);border-radius:18px;max-width:540px;width:100%;max-height:86vh;overflow:auto;padding:20px}
+.sheet h3{margin:0 0 2px;font-size:1.1rem}
+.sheet .sub{color:var(--mu);font-size:.82rem;margin-bottom:14px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.kv div{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:10px 12px}
+.kv span{display:block;font-size:.72rem;color:var(--mu);text-transform:uppercase;letter-spacing:.4px}
+.kv b{font-size:1.1rem}
+.quote{background:var(--bg);border:1px solid var(--bd);border-left:4px solid var(--pr);border-radius:10px;padding:10px 12px;font-size:.9rem;margin:8px 0;white-space:pre-wrap}
+.quote i{display:block;font-size:.72rem;color:var(--mu);font-style:normal;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:#1b2440;color:#fff;padding:10px 18px;border-radius:30px;font-size:.86rem;opacity:0;pointer-events:none;transition:.25s;z-index:90;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media(max-width:520px){.auth-card{padding:22px 18px}.kv{grid-template-columns:1fr}}
+</style></head><body>
+
+<!-- ================= LOGIN ================= -->
+<section id="screen-login" class="screen on">
+  <form class="auth-card" id="loginForm" autocomplete="off">
+    <div class="brand">🌐</div>
+    <h1 id="loginTitle">Masuk sebagai Siswa</h1>
+    <p class="sub" id="loginHint">Isi nama &amp; kelasmu, lalu masukkan kata sandi siswa.</p>
+    <div class="rtabs">
+      <button type="button" class="rtab on" data-role="siswa">👨‍🎓 Siswa</button>
+      <button type="button" class="rtab" data-role="admin">🛡️ Admin</button>
+    </div>
+    <div id="studentFields">
+      <div class="field"><label for="inNama">Nama lengkap</label><input id="inNama" placeholder="Contoh: Rani Putri" maxlength="40"></div>
+      <div class="field"><label for="inKelas">Kelas</label><input id="inKelas" placeholder="Contoh: XI TKJ 1" maxlength="24"></div>
+    </div>
+    <div class="field"><label for="inPass">Kata sandi</label><input id="inPass" type="password" placeholder="••••••" inputmode="numeric"></div>
+    <p class="err" id="loginErr"></p>
+    <button class="btn full" type="submit">Masuk ➜</button>
+    <p class="note">MPI Dasar Jaringan &amp; Konsep Perencanaan • TKJ Kelas 11<br>Hasil pekerjaanmu tersimpan otomatis di perangkat ini.</p>
+  </form>
+</section>
+
+<!-- ================= SISWA ================= -->
+<section id="screen-student" class="screen">
+<header><h1>🌐 Dasar Jaringan &amp; Konsep Perencanaan</h1><p>Media Pembelajaran Interaktif • TKJ Kelas 11</p>
+<div class="who"><span id="whoName"></span><button class="chip" type="button" onclick="logout()">Keluar</button></div></header>
+<nav id="nav"></nav>
+<main>
+<section id="s0"><h2>🔍 Apersepsi</h2>
+<div class="card"><b>Misi detektif jaringan!</b> Pilih satu gambar, lalu pilih namanya. Belum tahu? Tebak dulu, rasa penasaranmu adalah kuncinya! 🕵️</div>
+<div class="grid" id="imgs"></div><p class="mu" style="text-align:center">⬇️ Nama perangkat / konsep</p><div class="grid" id="names"></div>
+<p id="mm" class="mu"></p>
+<div class="card" id="curi" style="display:none"><b>🤔 Pertanyaan pemantik:</b><ul>
+<li>Bagaimana HP-mu bisa "ngobrol" dengan server game di negara lain?</li>
+<li>Kenapa satu kabel putus bisa membuat satu lab ikut mati?</li>
+<li>Kalau kamu diminta membangun jaringan sekolah, mulai dari mana?</li></ul>
+<button class="btn" onclick="go(1)">Cek kemampuan awalku ➜</button></div></section>
+
+<section id="s1"><h2>📝 Asesmen Awal</h2><p class="mu">Tidak ada nilai buruk di sini. Ini hanya untuk tahu posisimu sekarang. Jawab jujur ya!</p><div id="q-pre"></div></section>
+
+<section id="s2"><h2>📚 Materi Pokok</h2><p class="mu">Ketuk tiap kartu untuk membuka.</p>
+<details open><summary>🌍 1. Apa itu jaringan komputer?</summary><ul><li>Kumpulan perangkat yang saling terhubung untuk <b>berbagi data &amp; sumber daya</b> (file, printer, internet).</li><li>Komponen: <b>perangkat</b> (PC, HP, server), <b>media</b> (kabel/nirkabel), <b>aturan/protokol</b> (TCP/IP).</li></ul></details>
+<details><summary>📏 2. Jenis jaringan berdasarkan cakupan</summary><ul><li><b>PAN</b>: sekitar tubuhmu (Bluetooth, HP ↔ earbud)</li><li><b>LAN</b>: satu gedung/lab/sekolah</li><li><b>MAN</b>: satu kota (jaringan kampus antar gedung)</li><li><b>WAN</b>: antar kota/negara, contohnya internet 🌏</li></ul></details>
+<details><summary>🕸️ 3. Topologi jaringan</summary><ul><li><b>Bus</b>: satu kabel utama. Murah, tapi kabel putus = semua mati</li><li><b>Star</b>: semua ke switch. Paling umum, mudah dilacak, tapi switch mati = semua mati</li><li><b>Ring</b>: melingkar, data berputar</li><li><b>Mesh</b>: saling terhubung banyak jalur. Paling tangguh, tapi mahal</li></ul></details>
+<details><summary>🔌 4. Perangkat jaringan</summary><ul><li><b>Switch</b>: menghubungkan banyak PC dalam satu LAN</li><li><b>Router</b>: menghubungkan jaringan berbeda (LAN ↔ internet)</li><li><b>Access Point</b>: menyebarkan Wi-Fi</li><li><b>Kabel UTP</b> + konektor RJ-45, maksimal 100 m per segmen</li><li><b>NIC</b>: kartu jaringan di setiap perangkat</li></ul></details>
+<details><summary>🏷️ 5. Pengalamatan IP</summary><ul><li>IP address = "alamat rumah" perangkat, contoh <code>192.168.1.10</code></li><li>Setiap perangkat harus punya IP <b>unik</b>, kalau kembar terjadi <b>konflik IP</b></li><li>Subnet mask menentukan mana bagian jaringan dan mana bagian perangkat</li></ul></details>
+<details><summary>🗺️ 6. Konsep perencanaan jaringan</summary><ul><li>① <b>Analisis kebutuhan</b>: berapa pengguna, untuk apa?</li><li>② <b>Desain</b>: pilih topologi &amp; gambar denah</li><li>③ <b>Pilih perangkat &amp; anggaran</b></li><li>④ <b>Rencana IP</b>: tentukan blok alamat</li><li>⑤ <b>Pemasangan &amp; pengujian</b></li><li>⑥ <b>Dokumentasi &amp; pemeliharaan</b></li></ul></details>
+<button class="btn" onclick="go(3)">Coba simulasi ➜</button></section>
+
+<section id="s3"><h2>🧪 Simulasi Topologi</h2>
+<div class="card">Pilih topologi, lalu <b>ketuk perangkat/kabel utama untuk mematikannya</b> dan lihat dampaknya!</div>
+<div id="tb"></div><svg id="sv" viewBox="0 0 400 260"></svg>
+<div class="card"><div class="big" id="res">5 / 5</div><span class="mu">PC yang masih saling terhubung</span><div class="bar"><i id="rb"></i></div><div id="why" class="mu"></div>
+<button class="btn alt" onclick="rst()">🔄 Reset</button><button class="btn" onclick="go(4)">Lanjut kuis ➜</button></div></section>
+
+<section id="s4"><h2>🎯 Kuis Penguat</h2><p class="mu">Berpikir kritis dulu, baru jawab. Kamu langsung dapat umpan balik.</p><div id="q-quiz"></div></section>
+<section id="s5"><h2>🏁 Asesmen Akhir</h2><p class="mu">Tunjukkan yang sudah kamu pelajari. Hasil muncul di akhir.</p><div id="q-post"></div></section>
+
+<section id="s6"><h2>💭 Refleksi</h2>
+<div class="card" id="cmp"></div>
+<div class="card"><b>Bagaimana perasaanmu belajar hari ini?</b><br><span id="moods"></span></div>
+<div class="card"><b>Seberapa paham kamu sekarang?</b> <span id="lv">3</span>/5<br><input id="lvR" type="range" min="1" max="5" value="3" style="width:100%" oninput="document.getElementById('lv').textContent=this.value"></div>
+<div class="card"><b>Bagian paling menarik / paling sulit?</b><textarea id="noteMinat" placeholder="Tulis jujur, ini untukmu sendiri…"></textarea></div>
+<div class="card"><b>Satu langkah perbaikanku:</b><textarea id="noteFix" placeholder="Misal: latihan membuat denah jaringan 2x seminggu"></textarea></div>
+<div class="card"><b>🚀 Alur selanjutnya</b><ul><li>Pengalamatan IP &amp; subnetting</li><li>Instalasi kabel UTP (crimping &amp; tes LAN)</li><li>Konfigurasi router dan switch</li><li>Proyek: rancang jaringan sekolah impianmu!</li></ul><p class="mu">Setiap ahli jaringan pernah bingung dengan IP address. Kamu sudah mulai. 💪</p></div>
+<div class="card"><b>📤 Kumpulkan hasil</b><p class="mu">Unduh file hasilmu, lalu kirim ke guru. Guru dapat mengimpornya di panel admin.</p>
+<button class="btn" onclick="downloadMyResult()">⬇️ Unduh hasil saya</button>
+<button class="btn alt" onclick="logout()">Selesai &amp; keluar</button></div></section>
+</main>
+</section>
+
+<!-- ================= ADMIN ================= -->
+<section id="screen-admin" class="screen">
+<header><h1>🛡️ Panel Admin</h1><p>Rekap hasil belajar siswa • MPI Dasar Jaringan</p>
+<div class="who"><span>👤 Guru / Admin</span><button class="chip" type="button" onclick="logout()">Keluar</button></div></header>
+<main>
+  <div class="tools">
+    <button class="btn sm ghost" onclick="renderAdmin()">↻ Muat ulang</button>
+    <button class="btn sm ghost" onclick="exportCSV()">⬇️ Ekspor CSV</button>
+    <button class="btn sm ghost" onclick="document.getElementById('fileImport').click()">⬆️ Impor hasil siswa</button>
+    <button class="btn sm danger" onclick="clearAll()">🗑️ Hapus semua</button>
+    <input type="file" id="fileImport" accept=".json,application/json" hidden>
+  </div>
+  <div class="stats" id="stats"></div>
+  <input id="search" class="search" placeholder="🔎 Cari nama atau kelas…" autocomplete="off">
+  <div id="tableWrap"></div>
+  <p class="admin-note">ℹ️ Hasil disimpan di browser ini (localStorage). Jika siswa mengerjakan di perangkat lain, minta mereka menekan <b>“Unduh hasil saya”</b> di akhir materi, lalu gunakan <b>Impor hasil siswa</b> di sini.</p>
+</main>
+</section>
+
+<!-- modal detail -->
+<div class="modal" id="modal" onclick="if(event.target===this)closeDetail()">
+  <div class="sheet" id="sheet"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   KONFIGURASI KATA SANDI (ubah di sini bila perlu)
+   ============================================================ */
+const ADMIN_PASS = "12345";
+const SISWA_PASS = "112233";
+const DB_KEY = "mpi_hasil_v1";
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nowMs = () => Date.now();
+
+/* ---------------- penyimpanan hasil ---------------- */
+function loadDB(){
+  try{ const raw = localStorage.getItem(DB_KEY); const d = raw ? JSON.parse(raw) : {}; return (d && typeof d === "object") ? d : {}; }
+  catch(e){ return {}; }
+}
+function saveDB(db){
+  try{ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+  catch(e){ toast("Penyimpanan browser penuh / diblokir."); }
+}
+function sid(nama, kelas){ return (nama + "|" + kelas).toLowerCase().replace(/\s+/g, " ").trim(); }
+function upsertStudent(nama, kelas){
+  const db = loadDB(), id = sid(nama, kelas), t = nowMs();
+  const rec = db[id] || {
+    id, nama: nama.trim(), kelas: kelas.trim(),
+    pre: null, preTotal: 5, quiz: null, quizTotal: 5, post: null, postTotal: 8,
+    mood: null, level: 3, noteMinat: "", noteFix: "",
+    attempts: 0, created: t, status: "aktif"
+  };
+  rec.nama = nama.trim(); rec.kelas = kelas.trim();
+  rec.attempts = (rec.attempts || 0) + 1;
+  rec.lastLogin = t; rec.updated = t;
+  if(rec.status !== "selesai") rec.status = "aktif";
+  db[id] = rec; saveDB(db);
+  return rec;
+}
+function saveCurrent(patch){
+  if(!currentStudent) return;
+  if(patch) Object.assign(currentStudent, patch);
+  currentStudent.updated = nowMs();
+  const db = loadDB();
+  db[currentStudent.id] = currentStudent;
+  saveDB(db);
+}
+
+/* ---------------- navigasi layar ---------------- */
+let currentStudent = null;
+function showScreen(name){
+  ["login","student","admin"].forEach(k => {
+    const el = $("screen-" + k);
+    if(el) el.classList.toggle("on", k === name);
+  });
+  window.scrollTo(0,0);
+}
+function logout(){
+  sessionStorage.removeItem("mpi_student");
+  sessionStorage.removeItem("mpi_admin");
+  currentStudent = null;
+  $("toast").classList.remove("on");
+  setRole("siswa");
+  showScreen("login");
+}
+function openStudent(rec){
+  currentStudent = rec;
+  pre = rec.pre; post = rec.post;
+  $("whoName").textContent = "👤 " + rec.nama + " · " + rec.kelas;
+  showScreen("student");
+  syncReflection();
+  go(0);
+}
+
+/* ---------------- form login ---------------- */
+let role = "siswa";
+function setRole(r){
+  role = r;
+  const isSiswa = r === "siswa";
+  document.querySelectorAll(".rtab").forEach(x => x.classList.toggle("on", x.dataset.role === r));
+  $("studentFields").style.display = isSiswa ? "block" : "none";
+  $("loginTitle").textContent = isSiswa ? "Masuk sebagai Siswa" : "Masuk sebagai Admin";
+  $("loginHint").textContent = isSiswa
+    ? "Isi nama & kelasmu, lalu masukkan kata sandi siswa."
+    : "Masukkan kata sandi admin untuk melihat rekap hasil siswa.";
+  $("loginErr").textContent = "";
+  $("inPass").value = "";
+}
+document.querySelectorAll(".rtab").forEach(b => b.addEventListener("click", () => setRole(b.dataset.role)));
+
+$("loginForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const pass = $("inPass").value.trim();
+  $("loginErr").textContent = "";
+  if(role === "admin"){
+    if(pass !== ADMIN_PASS){ $("loginErr").textContent = "Kata sandi admin salah. Coba lagi."; return; }
+    sessionStorage.setItem("mpi_admin","1");
+    sessionStorage.removeItem("mpi_student");
+    $("inPass").value = "";
+    openAdmin();
+    return;
+  }
+  const nama = $("inNama").value.trim(), kelas = $("inKelas").value.trim();
+  if(nama.length < 2){ $("loginErr").textContent = "Nama minimal 2 karakter."; return; }
+  if(!kelas){ $("loginErr").textContent = "Kelas wajib diisi."; return; }
+  if(pass !== SISWA_PASS){ $("loginErr").textContent = "Kata sandi siswa salah. Coba lagi."; return; }
+  const rec = upsertStudent(nama, kelas);
+  sessionStorage.setItem("mpi_student", rec.id);
+  sessionStorage.removeItem("mpi_admin");
+  $("inPass").value = "";
+  openStudent(rec);
+});
+
+/* ---------------- toast ---------------- */
+let toastTimer = null;
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("on"), 2400);
+}
+
+/* ============================================================
+   MODUL SISWA
+   ============================================================ */
+/* navigasi tab */
+const T = ["🔍 Apersepsi","📝 Asesmen Awal","📚 Materi","🧪 Simulasi","🎯 Kuis","🏁 Asesmen Akhir","💭 Refleksi"];
+$("nav").innerHTML = T.map((t,i) => `<button onclick="go(${i})">${t}</button>`).join("");
+function go(i){
+  document.querySelectorAll("#screen-student main section").forEach((s,j) => s.classList.toggle("on", i == j));
+  document.querySelectorAll("#nav button").forEach((b,j) => b.classList.toggle("on", i == j));
+  if(i == 3 && !$("sv").innerHTML) topo("star");
+  if(i == 6){ cmp(); syncReflection(); }
+  scrollTo(0,0);
+}
+
+/* Apersepsi */
+const P = [["🛜","Router"],["🔀","Switch"],["🧶","Kabel UTP"],["⭐","Topologi Star"],["🏷️","IP Address"],["📡","Access Point"]];
+let selI = null, selN = null, found = 0, pre = null, post = null;
+$("imgs").innerHTML = P.map((p,i) => `<button class="tile" data-i="${i}" onclick="pick('i',${i},this)"><span class="e">${p[0]}</span>Gambar ${i+1}</button>`).join("");
+const sh = [...P.keys()].sort(() => Math.random() - .5);
+$("names").innerHTML = sh.map(i => `<button class="tile" data-i="${i}" onclick="pick('n',${i},this)">${P[i][1]}</button>`).join("");
+function pick(t,i,el){
+  const k = t == "i" ? "imgs" : "names";
+  document.querySelectorAll("#" + k + " .tile:not(.done)").forEach(x => x.classList.remove("sel"));
+  el.classList.add("sel");
+  if(t == "i") selI = [i, el]; else selN = [i, el];
+  if(selI && selN){
+    if(selI[0] == selN[0]){
+      [selI[1], selN[1]].forEach(x => { x.classList.remove("sel"); x.classList.add("done"); });
+      found++; $("mm").textContent = found + "/6 cocok!";
+    } else {
+      [selI[1], selN[1]].forEach(x => { x.classList.add("bad"); setTimeout(() => x.classList.remove("bad","sel"), 400); });
+      $("mm").textContent = "Belum cocok, coba lagi! 🤔";
+    }
+    selI = selN = null;
+    if(found == 6){ $("mm").textContent = "🎉 Semua cocok! Tapi apa fungsi masing-masing?"; $("curi").style.display = "block"; }
+  }
+}
+
+/* Quiz engine + bank soal */
+const PRE = [["Jaringan komputer adalah…",["Kumpulan perangkat yang saling terhubung untuk berbagi data","Satu komputer dengan banyak monitor","Program pengolah kata"],0],
+["Perangkat yang menghubungkan LAN ke internet adalah…",["Switch","Router","Kabel UTP"],1],
+["Alamat 192.168.1.10 disebut…",["MAC address","Nama domain","IP address"],2],
+["Pada topologi star, semua perangkat terhubung ke…",["Switch (pusat)","Satu kabel utama","Komputer tetangga"],0],
+["Jaringan yang mencakup satu lab/gedung disebut…",["WAN","LAN","PAN"],1]];
+const QZ = [["Sekolah punya 3 lab (30 PC/lab) dan butuh internet. Susunan paling masuk akal?",["Satu switch per lab, dihubungkan ke router","Semua PC ke satu hub kecil","Tanpa perangkat, kabel langsung antar PC"],0,"Switch tiap lab memudahkan pengelolaan, router menghubungkan ke internet."],
+["Switch pusat di topologi star mati. Apa yang terjadi?",["Hanya satu PC mati","Semua PC di switch itu terputus","Tidak ada dampak"],1,"Switch adalah titik pusat, kelemahan star (single point of failure)."],
+["Mengapa perencanaan dilakukan SEBELUM memasang kabel?",["Supaya tampak profesional","Menghindari salah beli, biaya bengkak & bongkar ulang","Tidak penting"],1,"Perencanaan menghemat biaya dan waktu, dan jaringan tahan dikembangkan."],
+["Dua PC diberi IP 192.168.1.20 yang sama. Dampaknya?",["Lebih cepat","Konflik IP, koneksi salah satu/keduanya bermasalah","Tidak ada"],1,"IP harus unik agar paket data sampai ke tujuan yang benar."],
+["Bank butuh jaringan sangat andal, anggaran besar. Topologi paling cocok?",["Bus","Mesh (banyak jalur cadangan)","Satu kabel panjang"],1,"Mesh punya jalur alternatif sehingga satu putus tidak mematikan jaringan."]];
+const POST = [["Contoh jaringan WAN adalah…",["Bluetooth earbud","Internet","Jaringan lab"],1],
+["Perangkat penyebar sinyal Wi-Fi…",["Access Point","Kabel UTP","Switch saja"],0],
+["Jarak maksimum kabel UTP per segmen…",["10 m","100 m","1 km"],1],
+["Topologi yang paling sering dipakai di LAN modern…",["Bus","Ring","Star"],2],
+["Langkah PERTAMA perencanaan jaringan…",["Beli perangkat","Analisis kebutuhan","Tarik kabel"],1],
+["Fungsi utama router…",["Menghubungkan jaringan berbeda","Menggandakan kabel","Menyimpan file"],0],
+["Mengapa dokumentasi jaringan penting?",["Untuk perawatan & pengembangan","Hiasan","Tidak perlu"],0],
+["Kelemahan topologi bus…",["Kabel utama putus, jaringan down","Terlalu mahal","Tidak bisa dipakai"],0]];
+
+function quiz(id,Q,fb,done){
+  const el = $(id); let n = 0, sc = 0, ans = false;
+  (function show(){
+    if(n >= Q.length){ done && done(sc, Q.length, el); return; }
+    const q = Q[n]; ans = false;
+    el.innerHTML = `<div class="card"><div class="mu">Soal ${n+1}/${Q.length}</div><div class="bar"><i style="width:${n/Q.length*100}%"></i></div><b>${q[0]}</b>${q[1].map((o,i)=>`<button class="opt" data-i="${i}">${"ABC"[i]}. ${o}</button>`).join("")}<div id="f${id}"></div><button class="btn" id="nx${id}" disabled>${n==Q.length-1?"Selesai":"Lanjut"} ➜</button></div>`;
+    el.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      if(ans) return; ans = true;
+      const i = +b.dataset.i;
+      if(i == q[2]) sc++;
+      if(fb){
+        el.querySelectorAll(".opt").forEach(o => { if(+o.dataset.i == q[2]) o.classList.add("ok"); });
+        if(i != q[2]) b.classList.add("no");
+        $("f" + id).innerHTML = `<div class="fb">${i == q[2] ? "✅ Tepat!" : "❌ Belum tepat."} ${q[3] || ""}</div>`;
+      } else b.classList.add("sel");
+      $("nx" + id).disabled = false;
+    });
+    $("nx" + id).onclick = () => { n++; show(); };
+  })();
+}
+
+quiz("q-pre",PRE,false,(s,t,el)=>{
+  pre = s; saveCurrent({pre:s, preTotal:t});
+  const l = s>=4 ? "Sudah kuat 💪" : s>=2 ? "Cukup, tinggal diasah 🔧" : "Mulai dari dasar, tenang! 🌱";
+  el.innerHTML = `<div class="card"><div class="big">${s}/${t}</div><b>${l}</b><p class="mu">Skor ini jadi pembandingmu di akhir nanti dan sudah tersimpan untuk guru.</p><button class="btn" onclick="go(2)">Mulai belajar ➜</button></div>`;
+});
+quiz("q-quiz",QZ,true,(s,t,el)=>{
+  saveCurrent({quiz:s, quizTotal:t});
+  el.innerHTML = `<div class="card"><div class="big">${s}/${t}</div><b>${s>=4 ? "Keren! Siap asesmen akhir 🏆" : "Pelajari lagi materinya, lalu ulangi 📖"}</b><br><button class="btn alt" onclick="go(2)">Baca materi</button><button class="btn" onclick="go(5)">Asesmen akhir ➜</button></div>`;
+});
+quiz("q-post",POST,false,(s,t,el)=>{
+  post = s; saveCurrent({post:s, postTotal:t, status:"selesai", completedAt:nowMs()});
+  el.innerHTML = `<div class="card"><div class="big">${Math.round(s/t*100)}</div><b>${s} dari ${t} benar</b><p class="mu">${s>=6 ? "Pemahamanmu sudah baik, luar biasa!" : "Masih ada yang perlu diperkuat, itu wajar. Lanjut refleksi untuk rencana perbaikan."}</p><button class="btn" onclick="go(6)">Refleksi ➜</button><button class="btn alt" onclick="downloadMyResult()">⬇️ Unduh hasil</button></div>`;
+});
+
+/* Simulasi */
+const C = [[200,130]];
+let tp = "star", dead = new Set(), N = [], E = [];
+const TD = {star:"⭐ Star", bus:"🚌 Bus", ring:"⭕ Ring", mesh:"🕸️ Mesh"};
+$("tb").innerHTML = Object.keys(TD).map(k => `<button class="btn" onclick="topo('${k}')">${TD[k]}</button>`).join("");
+function topo(t){
+  tp = t; dead = new Set(); N = []; E = [];
+  const pc = [...Array(5)].map((_,i) => { const a = i/5*6.283 - 1.57; return {id:i, x:200+95*Math.cos(a), y:130+95*Math.sin(a), pc:1, l:"PC"+(i+1)}; });
+  if(t == "star"){ N = [...pc, {id:5, x:200, y:130, l:"Switch"}]; pc.forEach(p => E.push([p.id,5])); }
+  else if(t == "bus"){
+    N = [0,1,2,3,4].map(i => ({id:i, x:50+i*75, y:i%2?200:60, pc:1, l:"PC"+(i+1)}));
+    N.push({id:5, x:200, y:130, l:"Kabel utama", bb:1});
+    N.forEach(p => p.pc && E.push([p.id,5]));
+  }
+  else {
+    N = pc;
+    for(let i=0;i<5;i++) E.push([i,(i+1)%5]);
+    if(t == "mesh") for(let i=0;i<5;i++) for(let j=i+2;j<5;j++) if(!(i==0 && j==4)) E.push([i,j]);
+  }
+  draw();
+}
+function draw(){
+  let s = "";
+  if(tp == "bus") s += `<line x1="30" y1="130" x2="370" y2="130" stroke="${dead.has(5) ? "#e0455a" : "#888"}" stroke-width="6" stroke-dasharray="${dead.has(5) ? "8 8" : ""}"/>`;
+  E.forEach(([a,b]) => {
+    if(tp == "bus") return;
+    const A = N.find(n => n.id == a), B = N.find(n => n.id == b);
+    s += `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="${dead.has(a)||dead.has(b) ? "#e0455a55" : "#888"}" stroke-width="2"/>`;
+  });
+  if(tp == "bus") N.filter(n => n.pc).forEach(n => s += `<line x1="${n.x}" y1="${n.y}" x2="${n.x}" y2="130" stroke="#888" stroke-width="2"/>`);
+  N.forEach(n => {
+    if(n.bb) return s += `<text x="200" y="152" text-anchor="middle" onclick="kill(5)" style="cursor:pointer">✂️ ketuk kabel: ${dead.has(5) ? "PUTUS" : "utama"}</text><rect x="30" y="122" width="340" height="16" fill="transparent" onclick="kill(5)" style="cursor:pointer"/>`;
+    s += `<g onclick="kill(${n.id})" style="cursor:pointer"><circle cx="${n.x}" cy="${n.y}" r="20" fill="${dead.has(n.id) ? "#e0455a" : n.pc ? "#3b6df0" : "#ff7a45"}"/><text x="${n.x}" y="${n.y+4}" text-anchor="middle" style="fill:#fff;font-weight:700">${n.pc ? n.l : "SW"}</text></g>`;
+  });
+  $("sv").innerHTML = s; calc();
+}
+function kill(i){ dead.has(i) ? dead.delete(i) : dead.add(i); draw(); }
+function rst(){ dead = new Set(); draw(); }
+function calc(){
+  const pcs = N.filter(n => n.pc && !dead.has(n.id)).map(n => n.id);
+  let best = 0, why = "Semua perangkat normal.";
+  if(dead.size){
+    if(tp == "ring"){ best = 0; why = "Ring tunggal: satu perangkat mati memutus lingkaran, jaringan terganggu."; }
+    else if(tp == "star" && dead.has(5)){ why = "Switch pusat mati, semua PC terputus. Inilah single point of failure."; }
+    else if(tp == "bus" && dead.has(5)){ why = "Kabel utama putus, semua PC terputus."; }
+    else {
+      const adj = {};
+      E.forEach(([a,b]) => { if(dead.has(a)||dead.has(b)) return; (adj[a]=adj[a]||[]).push(b); (adj[b]=adj[b]||[]).push(a); });
+      const seen = new Set();
+      pcs.forEach(p => {
+        if(seen.has(p)) return;
+        let q = [p], c = 0; seen.add(p);
+        while(q.length){
+          const x = q.pop();
+          if(N.find(n => n.id == x).pc) c++;
+          (adj[x]||[]).forEach(y => { if(!seen.has(y)){ seen.add(y); q.push(y); } });
+        }
+        best = Math.max(best, c);
+      });
+      why = tp == "mesh" ? "Mesh punya jalur cadangan, PC lain tetap terhubung." : "Hanya PC yang mati yang terputus, yang lain aman.";
+    }
+  } else best = 5;
+  if(tp == "ring" && !dead.size) best = 5;
+  $("res").textContent = best + " / 5";
+  $("rb").style.width = best/5*100 + "%";
+  $("why").textContent = why;
+}
+
+/* Refleksi */
+$("moods").innerHTML = ["😄","🙂","😐","😕","😴"].map(m => `<button class="mood" data-m="${m}" onclick="setMood('${m}',this)">${m}</button>`).join("");
+function setMood(m, btn){
+  document.querySelectorAll(".mood").forEach(x => x.classList.toggle("sel", x === btn));
+  saveCurrent({mood:m});
+  toast("Refleksi tersimpan ✓");
+}
+function collectNotes(){
+  if(!currentStudent) return;
+  const patch = {};
+  if($("noteMinat")) patch.noteMinat = $("noteMinat").value.trim();
+  if($("noteFix")) patch.noteFix = $("noteFix").value.trim();
+  if($("lvR")) patch.level = +$("lvR").value;
+  saveCurrent(patch);
+}
+["noteMinat","noteFix"].forEach(id => { if($(id)) $(id).addEventListener("change", collectNotes); });
+if($("lvR")) $("lvR").addEventListener("change", collectNotes);
+
+function syncReflection(){
+  if(!currentStudent) return;
+  if($("lvR")){ $("lvR").value = currentStudent.level || 3; $("lv").textContent = $("lvR").value; }
+  if($("noteMinat")) $("noteMinat").value = currentStudent.noteMinat || "";
+  if($("noteFix")) $("noteFix").value = currentStudent.noteFix || "";
+  document.querySelectorAll(".mood").forEach(x => x.classList.toggle("sel", x.dataset.m === currentStudent.mood));
+}
+function cmp(){
+  const p = currentStudent ? currentStudent.pre : null;
+  const q = currentStudent ? currentStudent.post : null;
+  $("cmp").innerHTML = (p == null || q == null)
+    ? "<b>📈 Perkembanganmu</b><p class='mu'>Selesaikan asesmen awal &amp; akhir untuk melihat perbandingan.</p>"
+    : `<b>📈 Perkembanganmu</b><p>Awal: <b>${p}/5</b> (${p*20}%) ➜ Akhir: <b>${q}/8</b> (${Math.round(q/8*100)}%)</p><p class="mu">${q/8*100 > p*20 ? "Ada peningkatan, selamat! 🎉" : "Tidak apa-apa, coba ulangi materi untuk memperkuat."}</p>`;
+}
+
+/* unduh hasil siswa */
+function downloadMyResult(){
+  if(!currentStudent){ toast("Silakan masuk terlebih dahulu."); return; }
+  collectNotes();
+  const payload = {app:"MPI Dasar Jaringan & Konsep Perencanaan", version:1, exportedAt:new Date().toISOString(), results:[currentStudent]};
+  const fname = "hasil-mpi-" + currentStudent.nama.replace(/[^a-z0-9]+/gi,"-").toLowerCase() + ".json";
+  downloadFile(JSON.stringify(payload, null, 2), fname, "application/json");
+  toast("Hasil diunduh. Kirim file ini ke guru ✓");
+}
+function downloadFile(text, name, type){
+  try{
+    const blob = new Blob([text], {type:(type||"application/json") + ";charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  }catch(e){ toast("Gagal mengunduh file."); }
+}
+
+/* ============================================================
+   PANEL ADMIN
+   ============================================================ */
+function openAdmin(){ showScreen("admin"); renderAdmin(); }
+function fmt(ts){
+  if(!ts) return "—";
+  try{ return new Date(ts).toLocaleString("id-ID", {day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit"}); }
+  catch(e){ return "—"; }
+}
+function pct(v, total){ return v == null ? null : Math.round(v/(total||1)*100); }
+function avg(arr){ return arr.length ? Math.round(arr.reduce((a,b) => a+b, 0)/arr.length) : 0; }
+
+function renderAdmin(){
+  const db = loadDB();
+  const all = Object.values(db);
+  const search = ($("search").value || "").toLowerCase().trim();
+  const list = all.filter(r => !search || String(r.nama||"").toLowerCase().includes(search) || String(r.kelas||"").toLowerCase().includes(search))
+                  .sort((a,b) => (b.updated||0) - (a.updated||0));
+
+  const preArr = all.filter(r => r.pre != null).map(r => pct(r.pre, r.preTotal));
+  const quizArr = all.filter(r => r.quiz != null).map(r => pct(r.quiz, r.quizTotal));
+  const postArr = all.filter(r => r.post != null).map(r => pct(r.post, r.postTotal));
+  const done = all.filter(r => r.status === "selesai").length;
+
+  $("stats").innerHTML = `
+    <div class="stat"><b>${all.length}</b><span>Siswa terdaftar</span></div>
+    <div class="stat"><b>${preArr.length ? avg(preArr) + "%" : "—"}</b><span>Rata-rata awal</span></div>
+    <div class="stat"><b>${quizArr.length ? avg(quizArr) + "%" : "—"}</b><span>Rata-rata kuis</span></div>
+    <div class="stat"><b>${postArr.length ? avg(postArr) + "%" : "—"}</b><span>Rata-rata akhir</span></div>
+    <div class="stat"><b>${done}</b><span>Selesai</span></div>`;
+
+  if(!list.length){
+    $("tableWrap").innerHTML = all.length
+      ? `<div class="empty"><span class="e">🔎</span>Tidak ada siswa yang cocok dengan “${esc($("search").value)}”.</div>`
+      : `<div class="empty"><span class="e">📭</span>Belum ada hasil.<br><span class="mu">Minta siswa masuk dengan akun siswa di perangkat ini, atau impor file hasil mereka.</span></div>`;
+    return;
+  }
+
+  $("tableWrap").innerHTML = `<div class="tblwrap"><table>
+    <thead><tr><th>Nama / Kelas</th><th>Awal</th><th>Kuis</th><th>Akhir</th><th>Nilai</th><th>Status</th><th>Aksi</th></tr></thead>
+    <tbody>${list.map((r,i) => {
+      const final = pct(r.post, r.postTotal);
+      const st = r.status === "selesai" ? `<span class="tag ok">✅ Selesai</span>` : (r.pre != null || r.quiz != null) ? `<span class="tag mid">🟡 Mengerjakan</span>` : `<span class="tag new">⚪ Baru masuk</span>`;
+      const eid = encodeURIComponent(r.id);
+      return `<tr>
+        <td><span class="nm">${esc(r.nama || "(tanpa nama)")}</span><span class="kp">${esc(r.kelas || "-")} • ${r.attempts||1}× masuk</span><span class="kp">🕒 ${fmt(r.updated)}</span></td>
+        <td>${r.pre == null ? "—" : `<b>${r.pre}</b>/${r.preTotal||5}`}</td>
+        <td>${r.quiz == null ? "—" : `<b>${r.quiz}</b>/${r.quizTotal||5}`}</td>
+        <td>${r.post == null ? "—" : `<b>${r.post}</b>/${r.postTotal||8}`}</td>
+        <td>${final == null ? "—" : `<b>${final}%</b>`}</td>
+        <td>${st}</td>
+        <td><div class="acts"><button class="btn sm ghost" data-act="view" data-id="${eid}">Detail</button><button class="btn sm danger" data-act="del" data-id="${eid}">Hapus</button></div></td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table></div>`;
+}
+
+$("search").addEventListener("input", renderAdmin);
+$("tableWrap").addEventListener("click", e => {
+  const b = e.target.closest("button[data-act]");
+  if(!b) return;
+  const id = decodeURIComponent(b.dataset.id);
+  if(b.dataset.act === "view") openDetail(id);
+  else if(b.dataset.act === "del") delResult(id);
+});
+
+let detailId = null;
+function openDetail(id){
+  const r = loadDB()[id];
+  if(!r){ toast("Data tidak ditemukan."); renderAdmin(); return; }
+  detailId = id;
+  const fp = pct(r.pre, r.preTotal), fq = pct(r.quiz, r.quizTotal), fa = pct(r.post, r.postTotal);
+  const diff = (fp != null && fa != null) ? fa - fp : null;
+  $("sheet").innerHTML = `
+    <h3>${esc(r.nama || "(tanpa nama)")}</h3>
+    <div class="sub">${esc(r.kelas || "-")} • ${r.attempts||1}× masuk • Diperbarui ${fmt(r.updated)}</div>
+    <div class="kv">
+      <div><span>Asesmen awal</span><b>${r.pre == null ? "—" : r.pre + "/" + (r.preTotal||5)}</b></div>
+      <div><span>Kuis penguat</span><b>${r.quiz == null ? "—" : r.quiz + "/" + (r.quizTotal||5)}</b></div>
+      <div><span>Asesmen akhir</span><b>${r.post == null ? "—" : r.post + "/" + (r.postTotal||8)}</b></div>
+      <div><span>Nilai akhir</span><b>${fa == null ? "—" : fa + "%"}</b></div>
+      <div><span>Peningkatan</span><b>${diff == null ? "—" : (diff >= 0 ? "+" : "") + diff + " poin"}</b></div>
+      <div><span>Status</span><b>${r.status === "selesai" ? "Selesai" : "Mengerjakan"}</b></div>
+    </div>
+    <div class="bar"><i style="width:${fa == null ? 0 : fa}%"></i></div>
+    <p class="mu">Perasaan saat belajar: <b style="font-size:1.2rem">${r.mood || "—"}</b> • Tingkat pemahaman: <b>${r.level == null ? "—" : r.level + "/5"}</b></p>
+    <div class="quote"><i>Bagian paling menarik / tersulit</i>${esc(r.noteMinat || "—")}</div>
+    <div class="quote"><i>Satu langkah perbaikan</i>${esc(r.noteFix || "—")}</div>
+    <p class="mu">Login terakhir: ${fmt(r.lastLogin)} • Selesai: ${fmt(r.completedAt)}</p>
+    <div class="tools">
+      <button class="btn sm" onclick="closeDetail()">Tutup</button>
+      <button class="btn sm danger" onclick="delResult(detailId, true)">Hapus data ini</button>
+    </div>`;
+  $("modal").classList.add("on");
+}
+function closeDetail(){ $("modal").classList.remove("on"); }
+
+function delResult(id, fromModal){
+  const r = loadDB()[id];
+  if(!r) return;
+  if(!confirm(`Hapus hasil milik "${r.nama}" (${r.kelas})?`)) return;
+  const db = loadDB(); delete db[id]; saveDB(db);
+  if(fromModal) closeDetail();
+  renderAdmin();
+  toast("Data dihapus.");
+}
+function clearAll(){
+  if(!Object.keys(loadDB()).length){ toast("Belum ada data untuk dihapus."); return; }
+  if(!confirm("Hapus SEMUA hasil siswa di perangkat ini? Tindakan ini tidak bisa dibatalkan.")) return;
+  saveDB({});
+  renderAdmin();
+  toast("Semua hasil dihapus.");
+}
+function exportCSV(){
+  const all = Object.values(loadDB());
+  if(!all.length){ toast("Belum ada data untuk diekspor."); return; }
+  const head = ["Nama","Kelas","Skor Awal","Total Awal","Skor Kuis","Total Kuis","Skor Akhir","Total Akhir","Nilai Akhir (%)","Status","Mood","Pemahaman (1-5)","Catatan Menarik","Rencana Perbaikan","Jumlah Masuk","Login Terakhir","Diperbarui"];
+  const rows = all.sort((a,b) => String(a.kelas||"").localeCompare(String(b.kelas||"")) || String(a.nama||"").localeCompare(String(b.nama||"")))
+    .map(r => [r.nama||"", r.kelas||"", r.pre ?? "", r.preTotal ?? 5, r.quiz ?? "", r.quizTotal ?? 5, r.post ?? "", r.postTotal ?? 8, pct(r.post, r.postTotal) ?? "", r.status === "selesai" ? "Selesai" : "Mengerjakan", r.mood||"", r.level ?? "", r.noteMinat||"", r.noteFix||"", r.attempts||1, fmt(r.lastLogin), fmt(r.updated)]);
+  const csv = [head, ...rows].map(row => row.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(",")).join("\r\n");
+  downloadFile("\ufeff" + csv, "rekap-hasil-mpi.csv", "text/csv");
+  toast("Rekap CSV diunduh.");
+}
+$("fileImport").addEventListener("change", e => {
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      let arr = [];
+      if(Array.isArray(data)) arr = data;
+      else if(Array.isArray(data.results)) arr = data.results;
+      else if(data && typeof data === "object") arr = Object.values(data).filter(x => x && typeof x === "object" && x.nama);
+      arr = arr.filter(x => x && x.nama && x.id);
+      if(!arr.length){ alert("File tidak berisi data hasil siswa yang valid."); return; }
+      const db = loadDB();
+      let added = 0, updated = 0;
+      arr.forEach(rec => {
+        const old = db[rec.id];
+        if(!old){ db[rec.id] = rec; added++; }
+        else if((rec.updated || 0) >= (old.updated || 0)){ db[rec.id] = Object.assign({}, old, rec); updated++; }
+      });
+      saveDB(db);
+      renderAdmin();
+      alert(`Impor selesai: ${added} data baru, ${updated} data diperbarui.`);
+    }catch(err){ alert("Gagal membaca file. Pastikan file JSON hasil dari halaman siswa."); }
+    e.target.value = "";
+  };
+  reader.readAsText(file);
+});
+
+/* ============================================================
+   INISIALISASI
+   ============================================================ */
+(function init(){
+  if(sessionStorage.getItem("mpi_admin")){ openAdmin(); return; }
+  const id = sessionStorage.getItem("mpi_student");
+  if(id){
+    const rec = loadDB()[id];
+    if(rec){ openStudent(rec); return; }
+    sessionStorage.removeItem("mpi_student");
+  }
+  showScreen("login");
+})();
+</script></body></html>
